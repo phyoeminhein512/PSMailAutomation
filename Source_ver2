@@ -154,7 +154,7 @@ function getStaffs(dataSheet) {
             logOut(iteNo, headBusinessPartner, 0);
           }
           staffList.push(staff);
-        }else if(responseDate == '' && remindDays == -1 ){ //Remind mail 対象
+        }else if((responseDate == '' || responseDate == "#N/A") && remindDays == -1 ){ //Remind mail 対象
           var staff = {};
           staff.iteNo = iteNo;
           staff.cellId = i+1;
