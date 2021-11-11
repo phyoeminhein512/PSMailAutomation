@@ -18,47 +18,77 @@ function main(){
     for(var k = 0; k < staffList.length; k++){
         //初回・2回目判定
         if(staffList[k].flag == true){
-          if(staffList[k].email != '' && staffList[k].email != null){
-            secondTimeEmailsList.push(staffList[k].email);
+          if(staffList[k].email != '' && staffList[k].email != null ){
+            if(secondTimeEmailsList.indexOf(staffList[k].email)+1){ //重複チェック
+              //何もしない
+            }else{
+              secondTimeEmailsList.push(staffList[k].email);
+            }
           }
           if(staffList[k].businessPartnerEmail != '' && staffList[k].businessPartnerEmail != null){
-            secondTimeEmailsList.push(staffList[k].businessPartnerEmail);
+            if(secondTimeEmailsList.indexOf(staffList[k].businessPartnerEmail)+1){ //重複チェック
+              //何もしない
+            }else{
+              secondTimeEmailsList.push(staffList[k].businessPartnerEmail);
+            }
           }
           if(staffList[k].headBusinessPartnerEmail != '' && staffList[k].headBusinessPartnerEmail != null){
-            secondTimeEmailsList.push(staffList[k].headBusinessPartnerEmail);
+            if(secondTimeEmailsList.indexOf(staffList[k].headBusinessPartnerEmail)+1){ //重複チェック
+              //何もしない
+            }else{
+              secondTimeEmailsList.push(staffList[k].headBusinessPartnerEmail);
+            }
           }
           lastTimekiken = staffList[k].expectedResponseDate;
+          if(secondTimeEmailsList.length >= 50){
+              Logger.log("2回目送信対象メールアドレス");
+              Logger.log(secondTimeEmailsList);
+              sendRemindMail(secondTimeEmailsList, lastTimekiken);
+              secondTimeEmailsList = [];
+          }
         }else{
           if(staffList[k].email != '' && staffList[k].email != null){
-            firstTimeEmailsList.push(staffList[k].email);
+            if(firstTimeEmailsList.indexOf(staffList[k].email)+1){ //重複チェック
+              //何もしない
+            }else{
+              firstTimeEmailsList.push(staffList[k].email);
+            }
           }
           if(staffList[k].businessPartnerEmail != '' && staffList[k].businessPartnerEmail != null){
-            firstTimeEmailsList.push(staffList[k].businessPartnerEmail);
+            if(firstTimeEmailsList.indexOf(staffList[k].businessPartnerEmail)+1){ //重複チェック
+              //何もしない
+            }else{
+              firstTimeEmailsList.push(staffList[k].businessPartnerEmail);
+            }
           }
           if(staffList[k].headBusinessPartnerEmail != '' && staffList[k].headBusinessPartnerEmail != null){
-            firstTimeEmailsList.push(staffList[k].headBusinessPartnerEmail);
+            if(firstTimeEmailsList.indexOf(staffList[k].headBusinessPartnerEmail)+1){ //重複チェック
+              //何もしない
+            }else{
+              firstTimeEmailsList.push(staffList[k].headBusinessPartnerEmail);
+            }
           }
           cellsList.push(staffList[k].cellId);
+          if(firstTimeEmailsList.length >= 50){
+              Logger.log("初回送信対象メールアドレス");
+              Logger.log(firstTimeEmailsList);
+              sendEmail(firstTimeEmailsList,dataSheet,cellsList);
+              firstTimeEmailsList = [];
+              cellsList = [];
+          }
         }
     }
 
-    //重複メールアドレス削除
-    var uniqueFirstTimeEmailsList = toUniqueArray(firstTimeEmailsList);
-    var uniqueSecondTimeEmailsList = toUniqueArray(secondTimeEmailsList);
-
     Logger.log("初回送信対象メールアドレス ");
-    //Logger.log(firstTimeEmailsList);
-    Logger.log(uniqueFirstTimeEmailsList);
+    Logger.log(firstTimeEmailsList);
     Logger.log("2回目送信対象メールアドレス");
-    //Logger.log(secondTimeEmailsList);
-    Logger.log(uniqueSecondTimeEmailsList);
-    //Logger.log(cellsList);
+    Logger.log(secondTimeEmailsList);
     //メール送信実施
-    if(uniqueFirstTimeEmailsList.length != 0){
-      sendEmail(uniqueFirstTimeEmailsList,dataSheet,cellsList);
+    if(firstTimeEmailsList.length != 0){
+      sendEmail(firstTimeEmailsList,dataSheet,cellsList);
     }
-    if(uniqueSecondTimeEmailsList.length != 0){
-      sendRemindMail(uniqueSecondTimeEmailsList, lastTimekiken);
+    if(secondTimeEmailsList.length != 0){
+      sendRemindMail(secondTimeEmailsList, lastTimekiken);
     }
   }else{
     Logger.log("対象スタッフなしです。");
@@ -161,7 +191,7 @@ function getStaffs(dataSheet) {
             logOut(iteNo, headBusinessPartner, 0);
           }
           staffList.push(staff);
-        }else if((responseDate == '' || responseDate == "#N/A") && remindDays >= -1 ){ //Remind mail 対象
+        }else if((result != '更新' && status != '退職' &&　responseDate == '' || responseDate == "#N/A") && remindDays >= -1 ){ 
           var staff = {};
           staff.iteNo = iteNo;
           staff.cellId = i+1;
@@ -194,6 +224,7 @@ function getStaffs(dataSheet) {
           staffList.push(staff);
         }
       }
+      Logger.log(staffList.length + "スタッフが送信対象です。");
       Logger.log("対象スタッフリスト");
       Logger.log(staffList);
   }catch (error){
@@ -207,6 +238,7 @@ function getStaffs(dataSheet) {
 //メール送信
 //PS更新依頼日とPS返却予定日更新
 function sendEmail(emailsList, dataSheet, cellsList){
+  Logger.log("メール送信開始");
   try{
     //件名
     var subjectName = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(2 ,4).getValue();
@@ -219,6 +251,7 @@ function sendEmail(emailsList, dataSheet, cellsList){
     var messageBody = templateText.replace("{replydate}", replyDate);
     //メール送信
     MailApp.sendEmail({to: jMEmailsList, bcc: emailsList.join(","), subject: subjectName, htmlBody:  messageBody}); 
+    Logger.log("メール送信成功");
     //PS更新依頼日とPS返却予定日更新
     updateDates(dataSheet,cellsList);
   }catch (emailSendErr){
@@ -228,17 +261,24 @@ function sendEmail(emailsList, dataSheet, cellsList){
 }
 
 function sendRemindMail(emailsList, lastTimekiken){
-  //件名
-  var subjectName = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,4).getValue();
-  //メールテンプレート取得
-  var templateText = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,3).getValue();
-  //Toメールアドレス取得
-  var jMEmailsList = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,2).getValue();
-  //回答納期整理
-  var replyDate = (lastTimekiken.getMonth()+1) +"月"+ (lastTimekiken.getDate()) + "日";
-  var messageBody = templateText.replace("{replydate}", replyDate);
-  //メール送信
-  MailApp.sendEmail({to: jMEmailsList, bcc: emailsList.join(","), subject: subjectName, htmlBody:  messageBody});
+  Logger.log("メール送信開始");
+  try{
+    //件名
+    var subjectName = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,4).getValue();
+    //メールテンプレート取得
+    var templateText = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,3).getValue();
+    //Toメールアドレス取得
+    var jMEmailsList = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("MailTemplate").getRange(3 ,2).getValue();
+    //回答納期整理
+    var replyDate = (lastTimekiken.getMonth()+1) +"月"+ (lastTimekiken.getDate()) + "日";
+    var messageBody = templateText.replace("{replydate}", replyDate);
+    //メール送信
+    MailApp.sendEmail({to: jMEmailsList, bcc: emailsList.join(","), subject: subjectName, htmlBody:  messageBody});
+    Logger.log("メール送信成功");
+  }catch (emailSendErr){
+    Logger.log("メール送信異常発生");
+    Logger.log(emailSendErr);
+  }
 }
 
 //日差分計算
