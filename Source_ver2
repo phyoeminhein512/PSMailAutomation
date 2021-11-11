@@ -125,23 +125,21 @@ function getStaffs(dataSheet) {
       for(var i = 1; i < data.length; i++){
         iteNo = data[i][0];
         result = data[i][13];
-        status = data[i][16];
+        status = data[i][18];
         dispatchEndDate = data[i][3];
-        email = data[i][41];
-        requestDate = data[i][30];
-        expectedResponseDate = data[i][31];
-        responseDate = data[i][32];
+        email = data[i][43];
+        requestDate = data[i][32];
+        expectedResponseDate = data[i][33];
+        responseDate = data[i][34];
         businessPartner　= data[i][4];
-        headBusinessPartner = data[i][20];
+        headBusinessPartner = data[i][22];
         
         //営業担当メールアドレス取得
         for(var y = 1; y < bpData.length; y++){
           if(bpData[y][0].toString().trim().replace("　","") == businessPartner.trim().replace("　","")){
             businessPartnerEmail = bpData[y][1];
-            //Logger.log(businessPartnerEmail);
           }else if(bpData[y][0].toString().trim() == headBusinessPartner.trim()){
             headBusinessPartnerEmail = bpData[y][1];
-            //Logger.log(headBusinessPartnerEmail);
           }
         }
         
@@ -158,7 +156,6 @@ function getStaffs(dataSheet) {
         }else{
           remindDays = undefined;
         }
-        //Logger.log(remindDays);
 
         //★★★★★★★対象スタッフ判定★★★★★★★★
         //結果が更新以外、且つ派遣終了日 - 現在の日<=60、且つステータスが退職以外、メールアドレスが空白以外、且つ変更依頼日が空白
@@ -299,8 +296,8 @@ function dateDiff(date1, date2){
 function updateDates(dataSheet, cellsList){
   for(var j = 0; j < cellsList.length; j++){
     //Logger.log(cellsList[j]);
-    dataSheet.getRange(cellsList[j], 31).setValue(Utilities.formatDate(new Date(), "GMT+1", "dd/MM/yyyy"));
-    dataSheet.getRange(cellsList[j], 32).setValue(Utilities.formatDate(getNextWeek(new Date()), "GMT+1", "dd/MM/yyyy"))
+    dataSheet.getRange(cellsList[j], 33).setValue(Utilities.formatDate(new Date(), "GMT+1", "dd/MM/yyyy"));
+    dataSheet.getRange(cellsList[j], 34).setValue(Utilities.formatDate(getNextWeek(new Date()), "GMT+1", "dd/MM/yyyy"))
   }
 }
 
